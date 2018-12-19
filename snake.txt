@@ -1,0 +1,603 @@
+/** Global Variables*/
+var Timer;
+var snakeArray = [];
+var OldSnakeArray = [];
+var food = 0;
+var KeyHolder = []; 
+var gameCounter = 0;
+var Lose = false;
+var speed = 200;
+var score = 0;
+var fiveInterval = 0;
+var gamemodeList = ["url('classic.png')","url('tunnel.png')","url('2playersnake.png')"];
+var tutorialList = ["classic.gif","tunnel.gif","twosnake.gif"];
+var gamemode = 0;
+var endPosition;
+var number1;
+var number2;
+var disable = false;
+var wallNumbers = [[0,0,29,870],[29,871,900,900]];
+/** Function Library */
+
+/** UserInterface Section ----------------------------------------------*/
+	/** moveSnake() takes the key code and picture to move the snake in a direction depending on key code pressed 
+		input: key code, picture
+		output:None
+		effect: depending on key pressed, the parameters are given to the functions that control the snakes direction that it moves in
+	*/
+	function moveSnake(e,pic){
+		if(Lose == false){
+			if(KeyHolder[0] == "ArrowUp"){
+				chosenDirection(-30,e,pic);
+			}
+			if(KeyHolder[0] == "ArrowDown"){
+				chosenDirection(30,e,pic);
+			}
+			if(KeyHolder[0] == "ArrowLeft"){
+				chosenDirection(-1,e,pic);
+			}
+			if(KeyHolder[0] == "ArrowRight"){
+				chosenDirection(1,e,pic);
+			}
+		}
+		else if(Lose == true){
+			if(gamemode == 0){
+				clearInterval(Timer);
+				restart();
+			}
+			if(gamemode == 2){
+				clearInterval(Timer);
+				clearInterval(Timer2);
+				restartSnake();
+			}
+		}
+	}
+	/** gameSelector() cycles through the list of game modes when you use the keyboard arrow keys
+		input: keyCode 
+		output:None
+		effect: move left or right through the list of game modes
+	*/
+	function gameSelector(e){
+		if(disable == false){
+			popUp("none");
+			if(e.keyCode == 37 ){
+				onclickArrow(-1);
+			}
+			if(e.keyCode == 39){
+				onclickArrow(1);
+			}
+			if(e.keyCode == 13){
+				play();
+			}
+		}
+	}
+	/** onclickArrow() cycles through the list of game modes when you click the arrow keys on screen
+		input: number 
+		output: None
+		effect: changes the picture and gamemode of start screen
+	*/
+	function onclickArrow(number){
+		gamemode = gamemode+number;
+		if (gamemode <= (-1)){
+			gamemode = gamemodeList.length-1
+		}
+		if (gamemode >= gamemodeList.length){
+			gamemode = 0;
+		}
+		for(var i = 0;;i++){
+			if(gamemode == i){
+				document.getElementById("gamemode").style.backgroundImage = gamemodeList[i].toString();
+				document.getElementById("tutorials").src = tutorialList[i];
+				break;
+			}
+		}
+	}
+	/** play() controls what game mode you want to play 
+		input: None 
+		output: None
+		effect: cycles through the game modes 
+	*/
+	function play(){
+		if(gamemode == 0){
+			disable = true;
+			startScreen("none");
+			popUp("none");
+			startTimer("url('snake.png')");
+			initClassic();
+		}
+		if(gamemode == 1){
+			disable = true;
+			startScreen("none");
+			popUp("none");
+			startTimer("url('snake.png')");
+			initTunnel();
+			pathMovement();
+		}
+		if(gamemode == 2){
+			disable = true;
+			startScreen("none");
+			popUp("none");
+			startTimer("url('snake.png')");
+			startSecondTimer("url('snakeTwo.png')");
+			initSnakeOne();
+			initSnakeTwo();
+		}
+	}
+	/** handleKeyDown() gets the key pressed and picture then passes the parameters to moveSnake
+		input: keyCode, picture 
+		output: None
+		effect: gives the moveSnake function the parameters that it received
+	*/
+	function handleKeyDown(e,pic){
+		moveSnake(e,pic);
+	}
+
+/** Movement Section ----------------------------------------------*/
+	/** chosenDirection() puts everything together
+		input: keyCode, picture 
+		output: 
+		effect: groups all the functions that create the snake and checks 
+	*/
+	function chosenDirection(number,e,pic){
+		endPosition = snakeArray[(snakeArray.length-1)];
+		OldSnakeArray = [];
+		for(var i = 0;i < snakeArray.length;i++){
+			OldSnakeArray.push(snakeArray[i])
+		}
+		snakeArray[0] = snakeArray[0]+number;
+		checkEaten(pic);
+		checkCollision();
+		snakeMaker(endPosition,pic);
+		gameChecker();
+	}
+
+
+/** Computer Generated Graphics Section ----------------------------------------------*/
+	/** generateRandomPos() creates the head of the snake in a random position
+		input: None 
+		output: None
+		effect: creates the head of the snake in a random location 
+	*/
+	function generateRandomPos(){
+		var randomNum = Math.floor((Math.random()*900));
+		for(var y = 0; y < wallNumbers[0].length;y++){
+			for(var i = wallNumbers[0][y]; i<wallNumbers[1][y]; i++){
+				while(randomNum == i){
+					randomNum = Math.floor((Math.random()*900));
+				}
+				if(y == 1 || y == 2){
+					i = i+30-1;
+				}
+			}
+		}
+		for(var i = 0; i<1 ;i++ ){
+			snakeArray.push(randomNum);
+		}
+	}
+	/** snakeMaker() creates the snake as it collects more food
+		input: None 
+		output: None
+		effect: changes the block behind the snake to make it look like its length increased
+	*/
+	function snakeMaker(endPosition,pic){
+		for(var i = 0; i<snakeArray.length; i++){
+			var num = snakeArray[i];
+			document.getElementById(num).style.backgroundImage = pic;
+			if(endPosition != null){
+				document.getElementById(endPosition).style.backgroundImage = "";
+			}
+		}
+	}
+	/** generateFood() creates a food block at a random location
+		input: None 
+		output: None
+		effect: creates a random food block at a location 
+	*/
+	function generateFood(){
+		document.getElementById(food).style.backgroundColor = "";
+		food = Math.floor((Math.random()*900));
+		document.getElementById(food).style.backgroundColor = "lime";
+		document.getElementById(food).value = "food"; 
+		foodChecker();
+		gameCounter++;
+	}
+	/** createWalls() creates the walls of the game
+		input: color 
+		output: None
+		effect: changes certain divs to a color as well as giving them a value of "wall" 
+	*/
+	function createWalls(color){
+		for(var i = 0; i<900;i++){
+			document.getElementById(i).value = 'gameBoard'
+		}
+		for(var y = 0; y < wallNumbers[0].length;y++){
+			for(var i = wallNumbers[0][y]; i<wallNumbers[1][y]; i++){
+				document.getElementById(i).value = 'wall'
+				document.getElementById(i).style.backgroundColor = color;
+				if(y == 1 || y == 2){
+					i = i+30-1;
+				}
+			}
+		}
+	}
+	/** cellColors() creates the game board
+		input: color 
+		output: None
+		effect: gets all the divs that aren't walls and turns it into a color 
+	*/
+	function cellColors(color){
+		var elem = document.getElementsByClassName("cell");
+		for (var i = 0;i <= elem.length-1;i++){
+			elem[i].style.backgroundColor = color;
+		}
+	}
+	/** textMaker() creates all the texts on the bottom
+		input: None 
+		output: None
+		effect: depending on gamemode it creates a text on the bottom of the game 
+	*/
+	function textMaker(){
+		if(gamemode == 0){
+			document.getElementById("scoreBoard").innerHTML = "Length: "+score;
+			document.getElementById("speedometer").innerHTML = "Speedometer: "+speed;	
+		}else if(gamemode == 1){
+			document.getElementById("scoreBoard").innerHTML = "Timeometer: "+score;
+			document.getElementById("speedometer").innerHTML = "Speedometer: "+speed;	
+		}else if(gamemode == 2){
+			document.getElementById("scoreBoard").innerHTML = "Red Wins: "+redScore+"<br>"+"Black Wins:"+blackScore
+			document.getElementById("speedometer").innerHTML = "Red Speed: "+speed2+"<br> "+"Black Speed:"+" "+speed;
+			
+		}			
+	}	
+
+/** Checking Section ----------------------------------------------*/
+	/** foodChecker() Checks to make sure none of the food blocks spawn on a wall or in the snake
+		input: None 
+		output: None
+		effect: checks for the food spawning on top of a wall or the snake if so, random the position again
+	*/
+	function foodChecker(){	
+		for(var i = 0; i<snakeArray.length; i++){
+			if(food==snakeArray[i]){
+				document.getElementById(food).style.backgroundImage = "('snake.png')";
+				document.getElementById(food).value = 'gameBoard'
+				generateFood();
+			}
+		}
+		for(var y = 0; y < wallNumbers[0].length;y++){
+			for(var i = wallNumbers[0][y]; i<wallNumbers[1][y]; i++){
+				if(food == i){
+					document.getElementById(food).style.backgroundColor = "black";
+					document.getElementById(food).value = 'wall'
+					generateFood();
+				}
+				if(y == 1 || y == 2){
+					i = i+30-1;
+				}
+			}
+		}
+	}
+	/** checkEaten() checks to see if the snake ate the food
+		input: picture 
+		output: None
+		effect: adds points, as well as generates another food when the snake eats the food 
+	*/
+	function checkEaten(pic){
+		var endPosition = snakeArray[(snakeArray.length-1)];
+		if(parseInt(snakeArray[0]) == food ){
+			snakeArray.push(parseInt(endPosition)-1);	
+			score++;
+			fiveInterval++;
+			textMaker()
+			speedInc(pic,"Length:",5,0.75);
+			generateFood();
+		}
+		if(gamemode == 2){
+			if(parseInt(snakeArray[0]) == foodTwo ){
+				snakeArray.push(parseInt(endPosition)-1);	
+				fiveInterval++;
+				textMaker()
+				speedInc(pic,"Length:",5,0.75);
+				generateFoodTwo();
+			}
+		}
+	}
+	/** gameChecker() checks if the snake collides with itself
+		input: None 
+		output: None
+		effect: checks if the snake head is equal to body, if so game is over and restarts 
+	*/
+	function gameChecker(){
+		var elem = document.getElementsByClassName("cell");
+		for(var i = 1; i<snakeArray.length; i++){
+			if(snakeArray[0]==snakeArray[i]){
+				Lose = true;
+				restart();
+			}
+		}
+		if(gamemode == 2){
+			for(var i = 1; i<snakeArray.length; i++){
+				if(snakeArray[0]==snakeArray[i]){
+					alert("Black snake has ran into itself!");
+					redScore++;
+					restartSnake();
+				}
+			}
+		}
+	}
+	/** checkCollision() checks to see if snake collides with anything
+		input: None 
+		output: None
+		effect: game is over, game restarts or change gamemode
+	*/
+	function checkCollision(){	
+		if(gamemode == 2){
+			if(document.getElementById(snakeArray[0]).value == "wall"){
+				alert("Black Snake has Hit a Wall!");
+				redScore++;
+				//Lose = true;
+				restartSnake();
+			}
+			else if(snakeArray[0] == snakeArrayTwo[0]){
+				alert("Tie!");
+				//Lose = true;
+				restartSnake();
+			}
+			for(var i=1;i<snakeArrayTwo.length;i++){
+				if(snakeArray[0] == snakeArrayTwo[i]){
+					alert("Black snake has crashed Red snake!");
+					redScore++;
+					//Lose = true;
+					restartSnake();
+				}
+			}
+		}
+		if(document.getElementById(snakeArray[0]).value == "wall"){
+			Lose = true;
+			restart();
+		}	
+		else{
+			if (snakeArray.length > 1){ 
+					for(var i = 0;i < snakeArray.length-1;i++){
+						snakeArray[i+1] = OldSnakeArray[i];
+					}
+			}
+		}
+	}
+	/** ADWSTest() checks to see if the key pressed is equal to any combination of the arrow keys pressed
+		input: Key,ADWS
+		output: [x,i] x is the number that represents up or down i is the number that represents left or right
+		effect:None 
+	*/
+	function ADWSTest(key,ADWS){
+		for(var i = 0;i < 2;i++){
+			for(var x = 0;x < 2;x++){
+				if(key == ADWS[i][x]){
+					return [x,i];
+				}
+			}
+		}
+	}
+	/** fastInputCounter() makes sure that you can't hit all the keys at once and run into youself
+		input: key 
+		output: returns true/false 
+		effect: None 
+	*/
+	function fastInputCounter(key){
+		var ADWS = [["ArrowLeft","ArrowRight"],["ArrowUp","ArrowDown"]];
+		var XI = ADWSTest(key,ADWS)
+		if(XI[0] == 0){
+			XI[0] = 1;
+		}else{
+			XI[0] = 0;
+		}
+		if (key != KeyHolder[0] && key != ADWS[XI[1]][XI[0]]){
+			var currentPos = parseInt(document.getElementById(snakeArray[0]).id);
+			var currentPos2;
+			if(snakeArray.length<2){
+				currentPos2 = endPosition;
+			}else{
+				currentPos2 = parseInt(document.getElementById(snakeArray[1]).id);			
+			}
+			number2 = (currentPos2-currentPos);
+			if (number1 == undefined){
+				number1 = (currentPos2-currentPos);
+				return true;
+			}
+			if(number2 != number1){
+				number1 = (currentPos2-currentPos);
+				return true;
+			}else{
+				number1 = 0;
+				return false;
+			}
+		}
+	}
+	/** checkBeforeInput() before the key is inputted into which key has been pressed, it checks to see if any opposite keys are pressed ex.ArrowUp cant trigger ArrowDown
+		input: key, variable  
+		output: returns true/false
+		effect: makes sure that when you move up cant move down
+	*/
+	function checkBeforeInput(key,variable){
+		var arrayKeys = ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"];
+		var storage = [[0,1,2,3],[1,0,3,2]]
+		if(variable.length == 0){
+			return true;
+		}
+		for(var x = 0;x < storage[0].length;x++){
+			if(variable[0] == arrayKeys[storage[0][x]]){
+				if(key == arrayKeys[storage[0][x]]){
+					return false;
+				}
+				if(key == arrayKeys[storage[1][x]]){
+					return false;
+				}else{
+					return true;
+				}
+			}
+		}
+	}
+/** Game Play Section ----------------------------------------------*/
+	/** speedInc() when the snake eats 5 food then then it speeds up
+		input: pic,var1,condition,percentage 
+		output: None 
+		effect: Increases the snake's speed 
+	*/
+	function speedInc(pic,var1,condition,percentage){
+			if(fiveInterval == condition){
+				speed = parseInt(speed*percentage);
+				textMaker()
+				clearInterval(Timer);
+				Timer=setInterval(function(){handleKeyDown(undefined,pic)}, speed);
+				fiveInterval=0;
+			}
+	}
+	/** restart() restarts the game 
+		input: None
+		output: None 
+		effect: restart the game and lets you decide if you want to change modes
+	*/
+	function restart(){
+		popUp("initial");
+		clearInterval(Timer);
+		for(var i=0; i<snakeArray.length;i++){
+			document.getElementById(snakeArray[i]).style.backgroundImage = "";
+		}
+		for(var j=0; j<OldSnakeArray.length;j++){
+			document.getElementById(OldSnakeArray[j]).style.backgroundImage = "";
+		}
+		OldSnakeArray.splice(0,OldSnakeArray.length);
+		snakeArray.splice(0,snakeArray.length);
+		KeyHolder.splice(0,KeyHolder.length)
+		fiveInterval = 0;
+		document.getElementById(food).style.backgroundColor = "";
+		score = 0; 
+		speed = 200; 
+		Lose = false;
+		startScreen("initial");
+		disable = false;
+		document.getElementById("tutorials").style.display = "none;"
+	}
+	/** deleteSnake() delete the snake 
+		input: None
+		output: None 
+		effect: deletes the entire snake in case of change in gamemode or new game
+	*/
+	function deleteSnake(){
+		for(var i=0; i<snakeArray.length;i++){
+			document.getElementById(snakeArray[i]).style.backgroundImage = "";
+		}
+		snakeArray.splice(0,snakeArray.length);
+		for(var j=0; j<OldSnakeArray.length;j++){
+			document.getElementById(OldSnakeArray[j]).style.backgroundImage = "";
+		}
+	}
+	/** popUp() makes the menu screen popUp
+		input: display 
+		output: None 
+		effect: displays a menu screen
+	*/
+	function popUp(display){
+		document.getElementById("winLose").style.display = display;
+	}
+	function tutorial(gif){
+		document.getElementById("tutorials").src = gif;
+	}
+
+/** Start&Initialize Section ----------------------------------------------*/	
+	/** initClassic() starts the classic snake gamemode
+		input: None 
+		output: None 
+		effect: starts the snake game 
+	*/
+	function initClassic(){
+		cellColors("rgb(12,38,25)");
+		var endPosition = snakeArray[(snakeArray.length-1)];
+		generateRandomPos();
+		generateFood();
+		snakeMaker(endPosition,"url('snake.png')");
+		createWalls("black");
+		textMaker()
+	}
+	/** startTimer() makes the snake move
+		input: pic
+		output: None 
+		effect: adds a interval to make the snake move
+	*/
+	function startTimer(pic){
+		deleteSnake()
+		clearInterval(Timer);
+		Timer=setInterval(function(){handleKeyDown(undefined,pic)}, speed);
+	}
+	/** init() makes the title screen 
+		input: None
+		output: None 
+		effect: adds event listeners in order for the divs to be clickable
+	*/
+	function init(){
+		document.getElementById("gamemode").addEventListener("click",function(){play()});
+		document.getElementById("gamemode").addEventListener("mouseover",function(){onHover()});
+		document.getElementById("gamemode").addEventListener("mouseout",function(){outHover()});
+		document.getElementById("Left").addEventListener("click",function(){onclickArrow(-1);});
+		document.getElementById("Right").addEventListener("click",function(){onclickArrow(1);});	
+		startScreen("initial");
+	}
+	/** onHover() when you hover over the gamemode you can click play 
+		input: None
+		output: None 
+		effect: puts the play picture when hovered over 
+	*/
+	function onHover(){
+		document.getElementById("gamemode").style.backgroundImage = "url('play.png')";
+	}
+	/** outHover() when you are not hovering over the gamemode it shows the gamemode
+		input: None
+		output: None 
+		effect: puts the play picture when not hovered over
+	*/
+	function outHover(){
+		document.getElementById("gamemode").style.backgroundImage = gamemodeList[gamemode];
+	}
+	/** window.onload gives the divs an effect such as clickable or can be hovered over
+		input: None
+		output: None 
+		effect: puts a title screen
+	*/
+	window.onload=function(){
+		init();	
+	}
+	/** input() checks to make sure all the keys pressed don't conflict 
+		input: e
+		output: None 
+		effect: checks different function to make sure keys pressed arent conflicting then inputs them
+	*/
+	function input(e){
+		if(document.getElementById("startScreen").style.display == "initial"){
+			return;
+		}else if (e != undefined){
+			var check;
+			var check2 = false;
+			var key = e.code;
+			if (key == "ArrowUp" || key =="ArrowDown"|| key =="ArrowLeft"|| key =="ArrowRight"){
+				check = checkBeforeInput(key,KeyHolder);
+				check2 = fastInputCounter(key)
+				if(check == true && check2 == true){
+					KeyHolder.push(e.code);
+					if(KeyHolder.length > 1){ 
+						KeyHolder.splice(0,1);
+					}
+				}
+
+			}
+		}
+	}
+	/** startScreen() displays the start screen
+		input: display
+		output: None 
+		effect: creates a start screen
+	*/
+	function startScreen(display){
+		document.getElementById("startScreen").style.display = display;
+		document.getElementById("wrapperNoOpacity").style.display = display;
+	}
+

@@ -1,0 +1,162 @@
+var pathSnake = 434;
+var pathWASD = [-30,-1,30,1];
+var pathWASD_Current = 0;
+var path = 0;
+var pathTimer;
+var miningSnake = [];
+var clock;
+/** initTunnel() initializes the tunnel
+	input: 
+	output:
+	effect: allows a gamemode named Tunnel to be played by the user
+*/
+function initTunnel(){
+	clock = setInterval(function(){timeCounter()}, 1000);
+	var endPosition = snakeArray[(snakeArray.length-1)];
+	snakeArray.push(434);
+	miningSnake.push(434);
+	snakeMaker(endPosition,"url('snake.png')");
+	createWalls("black");
+	cellColors("black");
+	textMaker();
+}
+/** timeCounter() counts the seconds the game has been running and changes the text with textMaker
+	input: key code, picture
+	output:
+	effect: counts time and updates score/time
+*/
+function timeCounter(){
+	score++;
+	fiveInterval++
+	textMaker();
+}
+/** randomMovement() randomly generates a number for the snake to move in a direction and how many numbers the snake has to go before moving and checks if it can move that way
+	input: key code, picture
+	output:
+	effect: generates direction, how many blocks, and checks if it can go to that location (stops the snake from going on and outside of the walls)
+*/
+function randomMovement(){
+	var isPerfect = false;
+	while(isPerfect == false){
+		var randomDirection = parseInt((Math.random()*10)*.4);
+		var randomTiles = parseInt((Math.random()*10)*.8)+1;
+		var tryPosition = pathWASD[randomDirection];
+		path = (pathSnake+randomTiles*tryPosition);
+		isPerfect = moveChecker(tryPosition,path,randomTiles,randomDirection);
+	}
+	pathWASD_Current = tryPosition;
+	return [randomDirection,randomTiles]
+}
+/** pathMovement() allows the interval to be called for the whitesnake(miningSnake) without making spawn more intervals for the same function
+	input: 
+	output:
+	effect: only allows the interval to be called once which is when the game starts
+*/
+function pathMovement(){
+	var randomArray = randomMovement();
+	pathTimer = setInterval(function(){pathColorer(randomArray[0],randomArray[1],"white")}, speed);
+}
+/** pathColorer() combines multiple functions to create a system that allows the snake to move while coloring its path white
+	input: randomDirection,randomTiles,color
+	output:
+	effect: moves and colors the snake
+*/
+function pathColorer(randomDirection,randomTiles,color){
+		var isInside = false;
+		for(var i = 0;i < 10;i++){
+			if(snakeArray[0] == miningSnake[i]){
+				document.getElementById(pathSnake).style.backgroundColor = color;
+				isInside = true;
+				break;
+			}
+		}
+		if(isInside == false){
+			Lose = true
+			restart_Tunnel();
+			restart()
+		}
+	miningSnake.push(pathSnake);
+	pathSnake = pathSnake+pathWASD[randomDirection];
+	if(fiveInterval == 10){
+		speedInc("url('snake.png')","Timeometer:",10,0.95)
+		clearInterval(pathTimer)
+		pathMovement();
+	}
+	overLap()
+	if(pathSnake == path){
+		clearInterval(pathTimer);
+		pathMovement();
+	}
+}
+/** overLap() test to see if the white snakes overlap and if they do at the end of the snake makes it not change colors
+	input: 
+	output:
+	effect: stops the end of the tail from changing to black when it goes over something
+*/
+function overLap(){
+	if(miningSnake.length > 9){
+		var overLap = false;
+		var overLapObject;
+		for(var i = 1;i < miningSnake.length-1;i++){
+			if(document.getElementById(miningSnake[0]) == document.getElementById(miningSnake[i])){
+				overLapObject = miningSnake[i];
+				overLap = true;
+			}
+		}
+		if(overLap == true && miningSnake[0] == overLapObject){
+			document.getElementById(miningSnake[0]).style.backgroundColor = "white";
+		}else{
+			document.getElementById(miningSnake[0]).style.backgroundColor = "rgb(0,0,0)";
+		}
+		miningSnake.splice(0,1);
+	}
+}
+/** restart_Tunnel() resest the background,snakes,variables, etc to its normal state
+	input:
+	output:
+	effect: resets the gamemode
+*/
+function restart_Tunnel(){
+		Lose = true;
+		clearInterval(clock);
+		clearInterval(pathTimer);
+		pathSnake = 434;
+		pathWASD_Current = 0;
+		path = 0;
+		miningSnake = [];
+}
+/** moveChecker() test to see if the movement of the white tunnel is allowed to move in that direction or not
+	input: tryPosition,path,randomTiles,randomDirection
+	output: true or false
+	effect: 
+*/
+function moveChecker(tryPosition,path,randomTiles,randomDirection){
+	for(var i = pathSnake;;){
+		if(document.getElementById(i+tryPosition) != null){
+			if(document.getElementById(i+tryPosition).className == 'wall'){
+				//alert("Current Position"+pathSnake+"\n"+"Length To Run:"+randomTiles+"\n"+"Amount:"+tryPosition+"\n"+"End Position:"+path+"\n"+i+"=="+parseInt(pathSnake+(randomTiles*tryPosition))+"\n Is it a wall:"+document.getElementById(i+tryPosition).value);
+				return false;
+			}
+		}else{
+			return false;
+		}
+		if(i == parseInt(pathSnake+(randomTiles*tryPosition))){
+			break;
+		}
+		i = i+tryPosition;
+	}
+	//alert(path != null)
+	if (tryPosition == -30 && pathWASD_Current != 30){
+		return true;
+	}
+	if (tryPosition == -1 && pathWASD_Current != 1){
+		return true;
+	}
+	if (tryPosition == 30 && pathWASD_Current != -30){
+		return true;
+	}
+	if (tryPosition == 1 && pathWASD_Current != -1){
+		return true;
+	}
+	return false;
+}

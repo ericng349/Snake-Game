@@ -1,0 +1,502 @@
+/** Global Variables */
+var snakeArrayTwo = [];
+var Timer2;
+var OldSnakeArrayTwo = [];
+var KeyHolderTwo = [];
+var endPositionTwo;
+var scoreTwo = 0;
+var fiveIntervalTwo = 0;
+var foodTwo = 0;
+var speed2 = 200;
+var number3;
+var number4;
+var redScore =0;
+var blackScore =0;
+/** Function Lirbary */
+	/** initialization ------------------------------------------------------*/
+		/** First Snake Section ----------------------------*/
+			/** initSnakeOne() initializes the first snake and sets up the gameBoard
+				input:None
+				output:None
+				effect: initializes all the functions to create the first snake and walls
+			*/
+			function initSnakeOne() {
+				cellColors("rgb(12,38,25)");
+				var endPosition = snakeArray[(snakeArray.length-1)];
+					generateFirstSnake();
+					generateFoodTwo();
+					snakeMaker(endPosition,"url('snake.png')");
+					createWalls("black");
+					textMaker();
+			}
+			/** generateFirstSnake() creates the position of the snake's head
+				input:None
+				output:None
+				effect: generates a random number and inputs it into the first position of the snakeArray  
+			*/
+			function generateFirstSnake() {
+				var randomNum = Math.floor((Math.random()*900));
+					for(var y = 0; y < wallNumbers[0].length;y++){
+						for(var i = wallNumbers[0][y]; i<wallNumbers[1][y]; i++){
+							while(randomNum == i){
+								randomNum = Math.floor((Math.random()*900));
+							}
+							if(y == 1 || y == 2){
+								i = i+29;
+							}
+						}
+					}	
+					for(var i = 0; i<1 ;i++ ){
+						snakeArray.push(randomNum);
+					}	
+			}
+		/**---------------------Second Snake Section ------------------------------*/
+			/** initSnakeTwo() initializes the Second snake
+				input:None
+				output:None
+				effect: initializes all the functions to create the Second snake
+			*/
+			function initSnakeTwo(){
+				var endPositionTwo = snakeArrayTwo[(snakeArrayTwo.length-1)];
+				generateSecondSnake();
+				snakeMakerTwo(endPositionTwo,"url('snakeTwo.png')");
+			}
+			/** startSecondTimer() Starts the interval that allows the second snake to move
+				input: pic
+				output:None
+				effect: adds an interval to the second snake
+			*/
+			function startSecondTimer(pic){
+				deleteSnakeTwo()
+				clearInterval(Timer2);
+				Timer2=setInterval(function(){handleKeyDownTwo(undefined,pic)},speed2);
+			}
+			/** generateSecondSnake() places the second snake somewhere on the board
+				input:None
+				output:None
+				effect: generates a random number and pushes it into the second snake array
+			*/
+			function generateSecondSnake() {
+				var randomNum = Math.floor((Math.random()*900));
+				for(var y = 0; y < wallNumbers[0].length;y++){
+					for(var i = wallNumbers[0][y]; i<wallNumbers[1][y]; i++){
+						while(randomNum == i){
+							randomNum = Math.floor((Math.random()*900));
+						}
+						if(y == 1 || y == 2){
+							i = i+30-1;
+						}
+					}
+				}
+				while(snakeArray[0]==randomNum){
+					randomNum = Math.floor((Math.random()*900));
+				}	
+				for(var i = 0; i<1 ;i++ ){
+					snakeArrayTwo.push(randomNum);
+				}	
+			}
+			/** snakeMakerTwo() creates the second snake 
+				input: endPositionTwo, pic
+				output:None
+				effect: changes the snake's color into a picture which creates the snake
+			*/
+			function snakeMakerTwo(endPositionTwo,pic){
+				for(var i = 0; i<snakeArrayTwo.length; i++){
+					//color1 = parseInt(Math.random()*255);
+					//color2 = parseInt(Math.random()*255);
+					//color3 = parseInt(Math.random()*255);
+					//color = "rgb("+color1+","+color2+","+color3+")";
+					var num = snakeArrayTwo[i];
+					document.getElementById(num).style.backgroundImage = pic;
+					if(endPositionTwo != null){ 
+						document.getElementById(endPositionTwo).style.backgroundImage = "";
+					}
+				}
+			}
+			/** deleteSnakeTwo() deletes the trail of the snake  
+				input: None
+				output:None
+				effect: deletes the trail that the snake leaves when it moves 
+			*/
+			function deleteSnakeTwo(){
+				//Delete snakeArray
+				for(var i=0; i<snakeArrayTwo.length;i++){
+					document.getElementById(snakeArrayTwo[i]).style.backgroundImage = "";
+				}
+				snakeArrayTwo.splice(0,snakeArrayTwo.length);
+				//Delete OldsnakeArray
+				for(var j=0; j<OldSnakeArrayTwo.length;j++){
+					document.getElementById(OldSnakeArrayTwo[j]).style.backgroundImage = "";
+				}
+			}
+		/**------------ Generate Food Section -------------------------*/
+			/** generateFoodTwo() creates a randomly placed food
+				input:None
+				output:None
+				effect: gets a random number and changes its color and value 
+			*/
+			function generateFoodTwo(){
+				document.getElementById(foodTwo).style.backgroundColor = "";
+				foodTwo = Math.floor((Math.random()*900));
+				document.getElementById(foodTwo).style.backgroundColor = "orange";
+				document.getElementById(foodTwo).value = "food"; // value to make the snake grow
+				foodCheckerTwo();
+				gameCounter++;
+			}
+			/** foodCheckerTwo() makes sure the position of the food isnt at the same spot as the wall or snake   
+				input:None
+				output:None
+				effect: does checks for if the food spawned inside the snake or wall and changes the spot if so 
+			*/
+			function foodCheckerTwo(){	
+				for(var i = 0; i<snakeArray.length; i++){
+					if(foodTwo==snakeArray[i]){
+						document.getElementById(foodTwo).style.backgroundImage = "('snake.png')";
+						document.getElementById(foodTwo).value = 'gameBoard'
+						generateFoodTwo();
+					}
+				}
+				for(var i = 0; i<snakeArrayTwo.length; i++){
+					if(foodTwo==snakeArrayTwo[i]){
+						document.getElementById(foodTwo).style.backgroundImage = "('snake.png')";
+						document.getElementById(foodTwo).value = 'gameBoard'
+						generateFoodTwo();
+					}
+				}
+				for(var y = 0; y < wallNumbers[0].length;y++){
+					for(var i = wallNumbers[0][y]; i<wallNumbers[1][y]; i++){
+						if(foodTwo == i){
+							document.getElementById(foodTwo).style.backgroundColor = "black";
+							document.getElementById(foodTwo).value = 'wall'
+							generateFoodTwo();
+						}
+						if(y == 1 || y == 2){
+							i = i+30-1;
+						}
+					}
+				}
+			}
+	/** UserInterface and inputs -----------------------------------------------*/
+		/** handleKeyDownTwo() creates a path for the key pressed into different functions  
+			input: e,pic
+			output:None
+			effect: gives the parameters of the key pressed, and the picture to moveSnakeTwo
+		*/
+		function handleKeyDownTwo(e,pic){
+			moveSnakeTwo(e,pic);
+		}
+		/** moveSnakeTwo() moves the snake in a certain direction   
+			input: e,pic
+			output:None
+			effect: depending on the key pressed, the function trigger another function that will change the direction of the snake  
+		*/
+		function moveSnakeTwo(e,pic){
+			if(Lose == false){
+				if(KeyHolderTwo[0] == "KeyW"){
+					chosenDirectionTwo(-30,e,pic);
+				}
+				if(KeyHolderTwo[0] == "KeyS"){
+					chosenDirectionTwo(30,e,pic);
+				}
+				if(KeyHolderTwo[0] == "KeyA"){
+					chosenDirectionTwo(-1,e,pic);
+				}
+				if(KeyHolderTwo[0] == "KeyD"){
+					chosenDirectionTwo(1,e,pic);
+				}
+			}
+			else if(Lose == true){
+				clearInterval(Timer2);
+				restartSnake();
+			}
+		}
+		/** chosenDirectionTwo() Moves the snake in a certain direction
+			input: number,e,pic
+			output:None
+			effect: makes the snake move in a certain direction by subtracting/adding and inputting it into the snake array
+		*/
+		function chosenDirectionTwo(number,e,pic){
+				endPositionTwo = snakeArrayTwo[(snakeArrayTwo.length-1)];
+				OldSnakeArrayTwo = [];
+				for(var i = 0;i < snakeArrayTwo.length;i++){
+					OldSnakeArrayTwo.push(snakeArrayTwo[i])
+				}
+				snakeArrayTwo[0] = snakeArrayTwo[0]+number;
+				checkEatenTwo(pic);
+				checkCollisionTwo();
+				snakeMakerTwo(endPositionTwo,pic);
+				gameCheckerTwo();
+		}
+		/** input() gets the key pressed by user  
+			input: e
+			output:None
+			effect: gets the key pressed and runs a test to make sure certain conditions are true
+		*/
+		function input2(e){
+			if(document.getElementById("startScreen").style.display == "initial"){
+				return;
+			}else if (e != undefined){
+				var check3;
+				var check4 = false;
+				var key = e.code;
+				if(key == "KeyW" || key == "KeyS" || key=="KeyA" || key == "KeyD"){
+					var arrayKeys = ["KeyW","KeyS","KeyA","KeyD"]
+					check3 = checkBeforeInputTwo(key,KeyHolderTwo,arrayKeys);
+					check4 = fastInputCounterTwo(key)
+					if(check3 == true && check4 == true){
+						KeyHolderTwo.push(e.code);
+						if(KeyHolderTwo.length > 1){ 
+							KeyHolderTwo.splice(0,1);
+						}
+					}
+				}
+			}	
+		}
+		/** checkBeforeInputTwo() makes sure that when you click one key you cannot click 
+			input: key,variable,arrayKeys
+			output: true/false
+			effect: gets the keys and if certain conditions are true such as while snake is moving upwards down and up cannot be pressed
+		*/
+		function checkBeforeInputTwo(key,variable,arrayKeys){
+			if(variable.length == 0){
+				return true;
+			}
+			if((variable[0]==arrayKeys[0])){
+				if(key == arrayKeys[0]){
+					return false;
+				}
+				if(key == arrayKeys[1]){
+					return false;
+				}else{
+					return true;
+				}
+			}
+			if((variable[0]==arrayKeys[1])){
+				if(key == arrayKeys[1]){
+					return false;
+				}
+				if(key == arrayKeys[0]){
+					return false;
+				}else{
+					return true;
+				}
+			}
+			if((variable[0]==arrayKeys[2])){
+				if(key == arrayKeys[2]){
+					return false;
+				}
+				if(key == arrayKeys[3]){
+					return false;
+				}else{
+					return true;
+				}
+			}
+			if((variable[0]==arrayKeys[3])){
+				if(key == arrayKeys[3]){
+					return false;
+				}
+				if(key == arrayKeys[2]){
+					return false;
+				}else{
+					return true;
+				}
+			}
+		}
+		/** fastInputCounterTwo() makes sure that you cant spam all the keys at once and run into yourself
+			input: key
+			output: true/false
+			effect: runs different tests to make sure you cant hit all the buttons at once then returns true
+		*/
+		function fastInputCounterTwo(key){
+			var ADWS = [["KeyA","KeyD"],["KeyW","KeyS"]];
+			var XI = ADWSTestTwo(key,ADWS)
+			if(XI[0] == 0){
+				XI[0] = 1;
+			}else{
+				XI[0] = 0;
+			}
+			if (key != KeyHolderTwo[0] && key != ADWS[XI[1]][XI[0]]){
+				var currentPos = parseInt(document.getElementById(snakeArrayTwo[0]).id);
+				var currentPos2;
+				if(snakeArrayTwo.length<2){
+					currentPos2 = endPositionTwo;
+				}else{
+					currentPos2 = parseInt(document.getElementById(snakeArrayTwo[1]).id);			
+				}
+				number4 = (currentPos2-currentPos);
+				if (number3 == undefined){
+					number3 = (currentPos2-currentPos);
+					return true;
+				}
+				if(number4 != number3){
+					number3 = (currentPos2-currentPos);
+					return true;
+				}else{
+					number3 = 0;
+					return false;
+				}
+			}
+		}
+		/** ADWSTestTwo() checks to see what keys are pressed
+			input: key,ADWS
+			output: x,i  (x is equal to left or right and i is up or down)
+			effect: None
+		*/
+		function ADWSTestTwo(key,ADWS){
+			for(var i = 0;i < 2;i++){
+				for(var x = 0;x < 2;x++){
+					if(key == ADWS[i][x]){
+						return [x,i];
+					}
+				}
+			}
+		}
+		/** Checking ---------------------------------------------------------*/
+			/** checkEatenTwo() runs different functions when the snake is eaten
+			input: pic
+			output: None
+			effect: runs functions when the snake collides with the foods
+			*/
+			function checkEatenTwo(pic){
+				var endPositionTwo = snakeArrayTwo[(snakeArrayTwo.length-1)];
+				if(parseInt(snakeArrayTwo[0]) == foodTwo){
+					snakeArrayTwo.push(parseInt(endPositionTwo)-1);	
+					fiveIntervalTwo++;
+					textMaker();
+					speedIncTwo(pic,"LengthRed:","LengthBlack:",5,0.75);
+					generateFoodTwo();
+				}
+			}
+			/** checkCollisionTwo() checks if the snake collides with the wall or other snake
+			input: None
+			output: None
+			effect: runs functions if the snake collides with wall or other snake
+			*/
+			function checkCollisionTwo(){	
+				if(document.getElementById(snakeArrayTwo[0]).value == "wall"){
+					alert("Red Snake has Hit a Wall!");
+					blackScore++;
+					restartSnake();
+				}
+				else if(snakeArrayTwo[0] == snakeArray[0]){
+						alert("Tie!");
+						restartSnake();
+				}
+				else{
+					if (snakeArrayTwo.length > 1){ // if the snake is greater than 1
+						for(var i = 0;i < snakeArrayTwo.length-1;i++){
+							snakeArrayTwo[i+1] = OldSnakeArrayTwo[i]; // sets the snakes cells to the old snake cells 1-??? never 0
+						}
+					}
+				}
+				for(var i =1; i<snakeArray.length;i++){
+					if(snakeArrayTwo[0] == snakeArray[i]){
+						alert("Red snake has crashed Black snake");
+						blackScore++;
+						Lose = true;
+						restartSnake();
+					}
+				}
+			}
+			/** gameCheckerTwo() runs different functions when the snake collides by itself
+			input: None
+			output: None
+			effect: runs functions when the snake collides with itself
+			*/
+			function gameCheckerTwo(){
+				var elem = document.getElementsByClassName("cell");
+				for(var i = 1; i<snakeArrayTwo.length; i++){
+					if(snakeArrayTwo[0]==snakeArrayTwo[i]){
+						Lose = true;
+						restartSnake();
+					}
+				}
+			}
+		/** GamePlay --------------------------------------------------------------*/
+			/** speedIncTwo() increases the speed of the snake if certain conditions are met
+			input: pic,var1,var2,condition,percentage
+			output: None
+			effect: when the condition is met (food is five) then speed up the snake 
+			*/
+			function speedIncTwo(pic,var1,var2,condition,percentage){
+					if(fiveIntervalTwo == condition){
+						textMaker();
+						speed2 = parseInt(speed2*percentage);
+						textMaker();
+						clearInterval(Timer2);
+						Timer2=setInterval(function(){handleKeyDownTwo(undefined,pic)}, speed2);
+						fiveIntervalTwo=0;
+					}
+			}
+	/** Restart --------------------------------------------------------------*/
+			/** restartSnake() restart the Snake
+			input: None
+			output: None
+			effect: if certain conditions are met then the game restarts
+			*/
+			function restartSnake(){
+				if(blackScore ==3){
+					popUp("initial");
+					textMaker();
+					alert("Black Snake has WON! Play Again?");
+					resetSnake();
+					document.getElementById(foodTwo).style.backgroundColor = "";//delete the current food
+					Lose = false;
+					startScreen("initial");
+					disable = false;
+				}
+				else if (redScore == 3){
+					textMaker();
+					alert("Red Snake has WON! Play Again?")
+					popUp("initial");
+					resetSnake();
+					document.getElementById(foodTwo).style.backgroundColor = "";//delete the current food
+					Lose = false;
+					startScreen("initial");
+					disable = false;
+				}
+				else if(blackScore != 3 || redScore != 3){
+					textMaker();
+					popUp("none");
+					resetSnake();
+					document.getElementById(foodTwo).style.backgroundColor = "";
+					Lose = false;
+					play();
+				}
+			}
+			/** resetSnake() restarts different things 
+			input: None
+			output: None
+			effect: if certain conditions are met then the game restarts
+			*/
+			function resetSnake(){
+				clearInterval(Timer);
+				clearInterval(Timer2);
+				for(var i=0; i<snakeArray.length;i++){
+						document.getElementById(snakeArray[i]).style.backgroundImage = "";
+				}
+				for(var j=0; j<OldSnakeArray.length;j++){
+					document.getElementById(OldSnakeArray[j]).style.backgroundImage = "";
+				}
+				for(var i=0; i<snakeArrayTwo.length;i++){
+					document.getElementById(snakeArrayTwo[i]).style.backgroundImage = "";
+				}
+				for(var j=0; j<OldSnakeArrayTwo.length;j++){
+					document.getElementById(OldSnakeArrayTwo[j]).style.backgroundImage = "";
+				}
+				OldSnakeArray.splice(0,OldSnakeArray.length);
+				snakeArray.splice(0,snakeArray.length);
+				OldSnakeArrayTwo.splice(0,OldSnakeArrayTwo.length);
+				snakeArrayTwo.splice(0,snakeArrayTwo.length);
+				KeyHolder.splice(0,KeyHolder.length);
+				KeyHolderTwo.splice(0,KeyHolderTwo.length);
+				speed = 200;
+				speed2 = 200;
+				if(redScore == 3 || blackScore == 3){
+					redScore = 0; 
+					blackScore = 0;
+					textMaker();
+				}
+				fiveInterval = 0;
+				fiveIntervalTwo = 0;
+			}
